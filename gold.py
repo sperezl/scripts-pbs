@@ -6,7 +6,8 @@
 # Author: Sergi Pérez Labernia, 2018.
 
 # Imports
-import os, sys
+import os
+import sys
 from argparse import ArgumentParser
 
 # Global definitions

@@ -6,7 +6,8 @@
 # Author: Sergi Pérez Labernia, 2017.
 
 # Imports
-import os, sys
+import os
+import sys
 from argparse import ArgumentParser
 
 # Global definitions
@@ -32,7 +33,7 @@ parser.add_argument('input', help='Input file name.')
 parser.add_argument('output', help='Output file name.')
 args = parser.parse_args()
 
-# Configurations
+
 def configureGeneral():
     if args.nproc == 1:
         pbsnodes = '\n#PBS -l nodes='+str(args.nproc)+':'+args.queue
@@ -42,14 +43,16 @@ def configureGeneral():
 
     return pbsnodes
 
+
 def configureScratch():
     if args.noscr:
         doNotDeleteScratch = 'touch NO_ESBORRAR_SCRATCH'
 
     else:
         doNotDeleteScratch = ''
-    
+
     return doNotDeleteScratch
+
 
 def configureQueue():
     if args.queue == 'borg1':
@@ -75,16 +78,17 @@ def configureQueue():
 
     return walltime
 
+
 def configureVersion():
-    
     if args.version:
         version = args.version
     else:
         # Default version
         version = '6.1'
 
-    exec = program+'.popt'
-    return version, exec
+    executable = program+'.popt'
+    return version, executable
+
 
 def configureFiles():
     if not os.path.isfile('./'+args.input):
@@ -97,10 +101,12 @@ def configureFiles():
     else:
         output = args.output
 
+
 def configureModule(version):
     return program+'/'+version
-    
-def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, exec):
+
+
+def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable):
 
     template = """#PBS -q {queue}
 #PBS -N {input}
@@ -124,7 +130,7 @@ fi
 {doNotDeleteScratch}
 
 ### EXECUTION ###
-{exec} -i {input} -o {output}
+{executable} -i {input} -o {output}
 
 ### RESULTS ###
 cp -f $SWAP_DIR/* $PBS_O_WORKDIR/$JOB_ID"""
@@ -140,11 +146,12 @@ cp -f $SWAP_DIR/* $PBS_O_WORKDIR/$JOB_ID"""
         "module": module,
         "doNotDeleteScratch": doNotDeleteScratch,
         "version": version,
-        "exec": exec,
+        "executable": executable,
     }
 
     with open(filename, 'w') as file:
         file.write(template.format(**context))
+
 
 def jobInformation(user, module):
     print('')
@@ -153,6 +160,7 @@ def jobInformation(user, module):
     print('Username: '+user)
     print('Modules: '+module)
 
+
 def submitJob():
     if args.nosub == False:
         os.system("/usr/local/torque/bin/qsub script.pbs")
@@ -160,14 +168,15 @@ def submitJob():
     else:
         print(filename+' created.\n')
 
+
 def main():
     pbsnodes = configureGeneral()
     doNotDeleteScratch = configureScratch()
     walltime = configureQueue()
-    version, exec = configureVersion()
+    version, execFile = configureVersion()
     configureFiles()
     module = configureModule(version)
-    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, exec)
+    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable)
     jobInformation(user, module)
     submitJob()
 main()

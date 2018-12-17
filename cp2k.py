@@ -86,7 +86,12 @@ def configureVersion():
         # Default version
         version = '6.1'
 
-    executable = program+'.popt'
+    if args.nproc == 1:
+        executable = program+'.popt'
+
+    else:
+        executable = 'mpirun -np '+args.nproc+' -mca blt openib,self '+program+'.popt'
+
     return version, executable
 
 

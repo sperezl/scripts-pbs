@@ -130,23 +130,15 @@ def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable
 #PBS -r n
 
 ### ENVIRONMENT ###	
-. /QFcomm/modules.profile 
+. /QFcomm/environment.bash
 module load {module}
-
-JOB_ID=${{PBS_JOBID%'.kirk.uab.es'}}
-SWAP_DIR=/scratch/{user}/$JOB_ID
-if [ ! -d "$SWAP_DIR" ]; then
-    mkdir -p $SWAP_DIR || exit $?
-    cp -r $PBS_O_WORKDIR/* $SWAP_DIR || exit $?
-    cd $SWAP_DIR
-fi
 {doNotDeleteScratch}
 
 ### EXECUTION ###
 {executable} -i {input} -o {output}
 
 ### RESULTS ###
-cp -f $SWAP_DIR/* $PBS_O_WORKDIR/$JOB_ID"""
+cp -a $SWAP_DIR $PBS_O_WORKDIR/$JOB_ID"""
 
     context = {
         "queue": args.queue,

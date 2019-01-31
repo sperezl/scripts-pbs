@@ -60,21 +60,24 @@ def configureQueue():
         sys.exit(1)
 
     elif args.queue == 'borg2':
-        walltime = int(secondsBorg2/args.nproc)
+        walltime = '\n#PBS -l walltime='+str(int(secondsBorg2/args.nproc))
 
         if args.nproc < 12:
             print('ERROR: No less than 12 cores in borg2')
             sys.exit(1)
 
+    elif args.queue == 'borg3':
+        walltime = ''
+
     elif args.queue == 'borg-test':
-        walltime = int(secondsBorgTest/args.nproc)
+        walltime = '\n#PBS -l walltime='+str(int(secondsBorgTest/args.nproc))
 
         if args.nproc > 8:
             print('ERROR: Maximum of 8 cores in borg-test')
             sys.exit(1)
 
     if args.walltime:
-        walltime = args.walltime/args.nproc
+        walltime = '\n#PBS -l walltime='+str(int(args.walltime/args.nproc))
 
     return walltime
 
@@ -82,15 +85,19 @@ def configureQueue():
 def configureVersion():
     if args.version:
         version = args.version
+
     else:
-        # Default version
         version = '6.1'
 
     if args.nproc == 1:
         executable = program+'.popt'
 
     else:
-        executable = 'mpirun -np '+args.nproc+' -mca blt openib,self '+program+'.popt'
+        if args.queue == 'borg2':    
+            executable = 'mpirun -np '+str(args.nproc)+' -mca blt openib,self '+program+'.popt'
+
+        elif args.queue == 'borg3' or args.queue == 'borg-test':
+            executable = 'mpirun -np '+str(args.nproc)+' -mca blt self '+program+'.popt'
 
     return version, executable
 
@@ -115,8 +122,7 @@ def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable
 
     template = """#PBS -q {queue}
 #PBS -N {input}
-#PBS -M {user}@klingon.uab.cat{pbsnodes}
-#PBS -l walltime={walltime}
+#PBS -M {user}@klingon.uab.cat{pbsnodes}{walltime}
 #PBS -k oe
 #PBS -r n
 
@@ -131,7 +137,6 @@ if [ ! -d "$SWAP_DIR" ]; then
     cp -r $PBS_O_WORKDIR/* $SWAP_DIR || exit $?
     cd $SWAP_DIR
 fi
-
 {doNotDeleteScratch}
 
 ### EXECUTION ###
@@ -178,7 +183,7 @@ def main():
     pbsnodes = configureGeneral()
     doNotDeleteScratch = configureScratch()
     walltime = configureQueue()
-    version, execFile = configureVersion()
+    version, executable = configureVersion()
     configureFiles()
     module = configureModule(version)
     makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable)

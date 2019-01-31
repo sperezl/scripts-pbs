@@ -121,7 +121,7 @@ def configureModule(version):
     return program+'/'+version
 
 
-def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable):
+def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output):
 
     template = """#PBS -q {queue}
 #PBS -N {input}
@@ -153,7 +153,7 @@ cp -f $SWAP_DIR/* $PBS_O_WORKDIR/$JOB_ID"""
         "user": user,
         "nproc": args.nproc,
         "input": args.input,
-        "output": args.output,
+        "output": output,
         "pbsnodes": pbsnodes,
         "walltime": walltime,
         "module": module,
@@ -189,7 +189,7 @@ def main():
     version, executable = configureVersion()
     output = configureFiles()
     module = configureModule(version)
-    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable)
+    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output)
     jobInformation(user, module)
     submitJob()
 main()

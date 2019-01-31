@@ -9,6 +9,7 @@
 import os
 import sys
 from argparse import ArgumentParser
+from pathlib import Path
 
 # Global definitions
 filename = 'script.pbs'
@@ -108,10 +109,12 @@ def configureFiles():
         sys.exit(1)
 
     if args.output == './':
-        output = args.input
-
+        output = Path(args.input).with_suffix('.out')
+    
     else:
         output = args.output
+
+    return output
 
 
 def configureModule(version):
@@ -184,7 +187,7 @@ def main():
     doNotDeleteScratch = configureScratch()
     walltime = configureQueue()
     version, executable = configureVersion()
-    configureFiles()
+    output = configureFiles()
     module = configureModule(version)
     makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable)
     jobInformation(user, module)

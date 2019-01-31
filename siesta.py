@@ -93,10 +93,10 @@ def configureVersion():
 
     else:
         if args.queue == 'borg2':    
-            executable = 'mpirun -np '+str(args.nproc)+' -mca blt openib,self '+program
+            executable = 'mpirun -np '+str(args.nproc)+' '+program
 
         elif args.queue == 'borg3' or args.queue == 'borg-test':
-            executable = 'mpirun -np '+str(args.nproc)+' -mca blt self '+program
+            executable = 'mpirun -np '+str(args.nproc)+' '+program
 
     return version, executable
 
@@ -135,7 +135,7 @@ module load {module}
 {executable} < $SWAP_DIR/{input} > $SWAP_DIR/{output}
 
 ### RESULTS ###
-cp -f $SWAP_DIR/* $PBS_O_WORKDIR/$JOB_ID"""
+cp -a $SWAP_DIR $PBS_O_WORKDIR/$JOB_ID"""
 
     context = {
         "queue": args.queue,

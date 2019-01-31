@@ -9,6 +9,7 @@
 import os
 import sys
 from argparse import ArgumentParser
+from pathlib import Path
 
 # Global definitions
 filename = 'script.pbs'
@@ -108,17 +109,19 @@ def configureFiles():
         sys.exit(1)
 
     if args.output == './':
-        output = args.input
-
+        output = Path(args.input).with_suffix('.out')
+    
     else:
         output = args.output
+
+    return output
 
 
 def configureModule(version):
     return program+'/'+version
 
 
-def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable):
+def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output):
 
     template = """#PBS -q {queue}
 #PBS -N {input}
@@ -127,30 +130,22 @@ def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable
 #PBS -r n
 
 ### ENVIRONMENT ###	
-. /QFcomm/modules.profile 
+. /QFcomm/environment.bash
 module load {module}
-
-JOB_ID=${{PBS_JOBID%'.kirk.uab.es'}}
-SWAP_DIR=/scratch/{user}/$JOB_ID
-if [ ! -d "$SWAP_DIR" ]; then
-    mkdir -p $SWAP_DIR || exit $?
-    cp -r $PBS_O_WORKDIR/* $SWAP_DIR || exit $?
-    cd $SWAP_DIR
-fi
 {doNotDeleteScratch}
 
 ### EXECUTION ###
 {executable} -i {input} -o {output}
 
 ### RESULTS ###
-cp -f $SWAP_DIR/* $PBS_O_WORKDIR/$JOB_ID"""
+cp -a $SWAP_DIR $PBS_O_WORKDIR/$JOB_ID"""
 
     context = {
         "queue": args.queue,
         "user": user,
         "nproc": args.nproc,
         "input": args.input,
-        "output": args.output,
+        "output": output,
         "pbsnodes": pbsnodes,
         "walltime": walltime,
         "module": module,
@@ -184,9 +179,9 @@ def main():
     doNotDeleteScratch = configureScratch()
     walltime = configureQueue()
     version, executable = configureVersion()
-    configureFiles()
+    output = configureFiles()
     module = configureModule(version)
-    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable)
+    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output)
     jobInformation(user, module)
     submitJob()
 main()

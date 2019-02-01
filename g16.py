@@ -87,15 +87,7 @@ def configureVersion():
     else:
         version = '16-C.01'
 
-    if args.nproc == 1:
-        executable = program
-
-    else:
-        if args.queue == 'borg2':    
-            executable = 'mpirun -np '+str(args.nproc)+' '+program
-
-        elif args.queue == 'borg3' or args.queue == 'borg-test':
-            executable = 'mpirun -np '+str(args.nproc)+' '+program
+    executable = 'g16'
 
     return version, executable
 
@@ -149,7 +141,7 @@ module load {module}
 ### EXECUTION ###
 date > $PBS_O_WORKDIR/{output}
 cat $PBS_NODEFILE >> $PBS_O_WORKDIR/{output}
-{executable} < $SWAP_DIR/{input} >> $PBS_O_WORKDIR/{output}
+{executable} < $SWAP_DIR/{input} >> $PBS_O_WORKDIR/{output} 2>&1
 date >> $PBS_O_WORKDIR/{output}
 """
 

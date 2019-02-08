@@ -85,7 +85,7 @@ def configureVersion():
         version = args.version
 
     else:
-        version = '16-C.01'
+        version = '16-B.01'
 
     executable = 'g16'
 
@@ -99,11 +99,11 @@ def configureFiles():
     else:
         with open(args.input, 'r') as inputFile:
             for line in inputFile:
-                if '%nproc='+str(args.nproc) in line:
+                if '%nproc='+str(args.nproc) or '%nprocs='+str(args.nproc) in line:
                     break
 
-                elif '%nproc=' in line:
-                    print('ERROR: You are asking for '+str(args.nproc)+' cores and you are setting '+line.rstrip()+' in your input file. This two values have to match.\nPlease correct it.\n')
+                elif '%nproc=' or '%nprocs=' in line:
+                    print('ERROR: You are asking for '+str(args.nproc)+' cores and you are setting '+line.rstrip()+' in your input file. These values do not match.\nPlease correct it.\n')
                     inputFile.close()
                     sys.exit()
 

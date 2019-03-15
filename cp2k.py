@@ -138,7 +138,7 @@ module load {module}
 {executable} -i {input} -o {output}
 
 ### RESULTS ###
-cp -a $SWAP_DIR $PBS_O_WORKDIR/$JOB_ID"""
+cp -a $SWAP_DIR $PBS_O_WORKDIR/{input}.$JOB_ID"""
 
     context = {
         "queue": args.queue,

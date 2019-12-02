@@ -28,6 +28,7 @@ parser.add_argument('-n', '--nproc', type=int, required=True, help='Number of pr
 parser.add_argument('-v', '--version', choices=['16'], help='Version of the software you want to use.')
 parser.add_argument('-s', '--noscr', action='store_true', help="Scratch won't be erased after 24 hours without writing.")
 parser.add_argument('-w', '--walltime', help='Custom walltime in seconds. Borg1-max: 10800000, Borg-2 max: 21600000, Borg-3 max: -, Borg-test max: 129600')
+parser.add_argument('-c', '--chk', action='store_true', help='Copy *.chk files to work dir.')
 parser.add_argument('-N', '--nosub', action='store_true', help='Do not submit. Only crate script.pbs file.')
 parser.add_argument('input', help='Input file name.')
 parser.add_argument('output', help='Output file name.')
@@ -40,7 +41,12 @@ def configureGeneral():
     elif args.nproc > 1:
         pbsnodes = '\n#PBS -l nodes=1:'+args.queue+':ppn='+str(args.nproc)
 
-    return pbsnodes
+    if args.chk:
+        copyChk = "cp -a $SWAP_DIR/*.chk $PBS_O_WORKDIR"
+    else:
+        copyChk = ''
+
+    return pbsnodes, copyChk
 
 
 def configureScratch():
@@ -125,7 +131,7 @@ def configureModule(version):
     return program+'/'+version
 
 
-def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output):
+def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output, copyChk):
 
     template = """#PBS -q {queue}
 #PBS -N {input}
@@ -143,6 +149,7 @@ date > $PBS_O_WORKDIR/{output}
 cat $PBS_NODEFILE >> $PBS_O_WORKDIR/{output}
 {executable} < $SWAP_DIR/{input} >> $PBS_O_WORKDIR/{output} 2>&1
 date >> $PBS_O_WORKDIR/{output}
+{copyChk}
 """
 
     context = {
@@ -157,6 +164,7 @@ date >> $PBS_O_WORKDIR/{output}
         "doNotDeleteScratch": doNotDeleteScratch,
         "version": version,
         "executable": executable,
+        "copyChk": copyChk
     }
 
     with open(filename, 'w') as file:
@@ -180,13 +188,13 @@ def submitJob():
 
 
 def main():
-    pbsnodes = configureGeneral()
+    pbsnodes, copyChk = configureGeneral()
     doNotDeleteScratch = configureScratch()
     walltime = configureQueue()
     version, executable = configureVersion()
     output = configureFiles()
     module = configureModule(version)
-    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output)
+    makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable, output, copyChk)
     jobInformation(user, module)
     submitJob()
 main()

@@ -27,7 +27,7 @@ mpi = ''
 parser = ArgumentParser( description = 'orca.py allows to summit ORCA jobs to kirk cluster. ')
 parser.add_argument('-q', '--queue', choices = ['borg1','borg2','borg3','borg-test'], required = True, help = 'Queue to submit to.')
 parser.add_argument('-n', '--nproc', type = int, required = True, help = 'Number of processors.')
-parser.add_argument('-v', '--version', choices = ['2.7','2.8','3','4','4.1.2'], help = 'Version of the software you want to use.')
+parser.add_argument('-v', '--version', choices = ['2.7','2.8','3','4','4.1.2','4.2.1'], help = 'Version of the software you want to use.')
 parser.add_argument('-s', '--noscr', action='store_true', help = "Scratch won't be erased after 24 hours without writing.")
 parser.add_argument('-w', '--walltime', help = 'Custom walltime in seconds. Borg1-max: 10800000, Borg-2 max: 21600000, Borg-3 max: -, Borg-test max: 129600')
 parser.add_argument('-N', '--nosub', action='store_true', help = 'Do not submit. Only crate script.pbs file.' )
@@ -89,7 +89,7 @@ def configureVersion():
         version = args.version
     else:
         # by default, last one
-        version = '4.1.2'
+        version = '4.2.1'
 
     if version == '2.7':
         print ('ORCA version '+args.version+' is not avaible in this system.')
@@ -129,7 +129,7 @@ def configureFiles():
 
     elif args.nproc > 1:
         if not 'Opt PAL' or not 'nproc' in open(args.input).read():
-            print('ERROR: Add Opt PAL{} or %pal nproc = {} in your input file. See Orca Job script page in wiki.qf.uab.cat '.format(args.nproc))
+            print('ERROR: Add Opt PAL {} or %pal nproc = {} in your input file. See Orca Job script page in wiki.qf.uab.cat '.format(args.nproc, args.nproc))
             sys.exit()
                 
     if args.output == './':

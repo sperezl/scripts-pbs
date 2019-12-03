@@ -27,7 +27,7 @@ mpi = ''
 parser = ArgumentParser( description = 'orca.py allows to summit ORCA jobs to kirk cluster. ')
 parser.add_argument('-q', '--queue', choices = ['borg1','borg2','borg3','borg-test'], required = True, help = 'Queue to submit to.')
 parser.add_argument('-n', '--nproc', type = int, required = True, help = 'Number of processors.')
-parser.add_argument('-v', '--version', choices = ['2.7','2.8','3','4','4.1.2','4.2.1'], help = 'Version of the software you want to use.')
+parser.add_argument('-v', '--version', choices = ['4.0.0', '4.1.2','4.2.1'], help = 'Version of the software you want to use.')
 parser.add_argument('-s', '--noscr', action='store_true', help = "Scratch won't be erased after 24 hours without writing.")
 parser.add_argument('-w', '--walltime', help = 'Custom walltime in seconds. Borg1-max: 10800000, Borg-2 max: 21600000, Borg-3 max: -, Borg-test max: 129600')
 parser.add_argument('-N', '--nosub', action='store_true', help = 'Do not submit. Only crate script.pbs file.' )
@@ -91,35 +91,7 @@ def configureVersion():
         # by default, last one
         version = '4.2.1'
 
-    if version == '2.7':
-        print ('ORCA version '+args.version+' is not avaible in this system.')
-        sys.exit()
-
-    elif version == '2' or version == '2.8' or version == '2.8.0':
-        compiler = 'intel2011'
-        mpi = 'openmpi/1.8.1'
-        version = '2.8.0'
-
-    elif version == '3.0.2':
-        compiler = 'intel2011'
-        mpi = 'openmpi/1.8.1'
-        version = '3.0.2'
-
-    elif version == '3' or version == '3.0' or version == '3.0.3':
-        compiler = 'intel2011'
-        mpi = 'openmpi/1.8.1'
-        version = '3.0.3'
-
-    elif version == '3' or version == '3.0.2':
-        compiler = 'intel2011'
-        mpi = 'openmpi/1.8.1'
-        version = '3.0.2'
-
-    else:
-        compiler = 'gcc'
-        mpi = 'openmpi'
-
-    return compiler, mpi, version
+    return version
 
 
 def configureFiles():
@@ -141,25 +113,11 @@ def configureFiles():
     return output
 
 
-def configureModule (compiler, mpi, version):
-    module = program+'/'+version    
-
-    # cal afegir module ompi si no es la v 4
-    if version in ['2.7', '2.8', '3']:
-        if args.queue == 'borg-test': 
-            queue = 'borg3'
-        else: 
-            queue = args.queue
-
-        module2 = 'module load '+mpi+'_'+compiler+'-'+queue
-    
-    else:
-        module2 = ''
-
-    return program+'/'+version, module2
+def configureModule (version):
+    return program+'/'+version
 
 
-def makeFile(pbsnodes, walltime, memory, module, module2, doNotDeleteScratch, version, program, output):
+def makeFile(pbsnodes, walltime, memory, module, doNotDeleteScratch, version, program, output):
         
     template= """#PBS -q {queue}
 #PBS -N {input}
@@ -170,7 +128,6 @@ def makeFile(pbsnodes, walltime, memory, module, module2, doNotDeleteScratch, ve
 ### ENVIRONMENT ### 
 . /QFcomm/environment.bash
 module load {module}
-{module2}
 {doNotDeleteScratch}
 ### EXECUTION ###
 exec=`which {program}`
@@ -200,7 +157,6 @@ cp $SWAP_DIR/*.prop $PBS_O_WORKDIR/
         'walltime': walltime,
         'memory': memory,
         'module': module,
-        'module2': module2,
         'doNotDeleteScratch': doNotDeleteScratch,
         'version': version,
         'program': program,
@@ -210,12 +166,12 @@ cp $SWAP_DIR/*.prop $PBS_O_WORKDIR/
         file.write(template.format(**context))
 
 
-def showInformation (hostname, user, module, module2):
+def showInformation (hostname, user, module):
     print ( '' )
     print ( '--- Script information ---' )
     print ( 'Hostname : '+hostname )
     print ( 'Username: '+user )
-    print ( 'Modules: '+module+' '+module2 )
+    print ( 'Modules: '+module )
 
 
 def submitJob ():
@@ -229,10 +185,10 @@ def main():
     pbsnodes, memory = configureGeneral()
     doNotDeleteScratch = configureScratch()
     walltime = configureQueue()
-    compiler, mpi, version = configureVersion()
+    version = configureVersion()
     output = configureFiles()
-    module, module2 = configureModule(compiler, mpi, version)
-    makeFile(pbsnodes, walltime, memory, module, module2, doNotDeleteScratch, version, program, output)
-    showInformation(hostname, user, module, module2)
+    module = configureModule(version)
+    makeFile(pbsnodes, walltime, memory, module, doNotDeleteScratch, version, program, output)
+    showInformation(hostname, user, module)
     submitJob()
 main()

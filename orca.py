@@ -30,6 +30,7 @@ parser.add_argument('-n', '--nproc', type = int, required = True, help = 'Number
 parser.add_argument('-v', '--version', choices = ['4.0.0', '4.1.2','4.2.1'], help = 'Version of the software you want to use.')
 parser.add_argument('-s', '--noscr', action='store_true', help = "Scratch won't be erased after 24 hours without writing.")
 parser.add_argument('-w', '--walltime', help = 'Custom walltime in seconds. Borg1-max: 10800000, Borg-2 max: 21600000, Borg-3 max: -, Borg-test max: 129600')
+parser.add_argument('-m', '--memory', type=int, help='Custom memory allocation in GB. By default 4x nproc' )
 parser.add_argument('-N', '--nosub', action='store_true', help = 'Do not submit. Only crate script.pbs file.' )
 parser.add_argument('input', help = 'Input file name.')
 parser.add_argument('output', help = 'Output file name.')
@@ -43,7 +44,10 @@ def configureGeneral():
     elif args.nproc > 1:
         pbsnodes = '\n#PBS -l nodes=1:'+args.queue+':ppn='+str(args.nproc)
 
-    memory = '\n#PBS -l mem='+str(args.nproc*4)+'GB'
+    if args.memory:
+        memory = '\n#PBS -l mem='+str(args.memory)+'GB'
+    else:
+        memory = '\n#PBS -l mem='+str(args.nproc*4)+'GB'
 
     return pbsnodes, memory
 

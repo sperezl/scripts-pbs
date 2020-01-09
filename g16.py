@@ -143,6 +143,7 @@ def makeFile(pbsnodes, walltime, module, doNotDeleteScratch, version, executable
 . /QFcomm/environment.bash
 module load {module}
 {doNotDeleteScratch}
+GAUSS_SCRDIR=$SWAP_DIR
 
 ### EXECUTION ###
 date > $PBS_O_WORKDIR/{output}
